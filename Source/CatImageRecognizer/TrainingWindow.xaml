@@ -1,0 +1,355 @@
+﻿<Controls:MetroWindow x:Class="CatImageRecognizer.TrainingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CatImageRecognizer" WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d" Closing="MetroWindow_Closing"
+        Title="{Binding NetworkName}" Height="720" Width="860" ResizeMode="NoResize">
+
+    <Controls:MetroWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <local:BooleanInverterConverter x:Key="booleanInverter"></local:BooleanInverterConverter>
+            <local:EmgCVImageToBitmapImage x:Key="cvImageToBitmapImage"></local:EmgCVImageToBitmapImage>
+            <local:BoolToVisibilityConverter  x:Key="boolVisibilityConverter"></local:BoolToVisibilityConverter>
+            <local:BoolToVisibilityCollapsedConverter x:Key="boolVisibilityCollapsedConverter"></local:BoolToVisibilityCollapsedConverter>
+            <local:EmptyListToVisibilityConverter x:Key="emptyListVisibilityConverter"></local:EmptyListToVisibilityConverter>
+            <local:MultipleBooleanANDConverter x:Key="multipleBooleanANDConverter"></local:MultipleBooleanANDConverter>
+            <local:MultipleBooleanORConverter x:Key="multipleBooleanORConverter"></local:MultipleBooleanORConverter>
+            <local:CatImageTypeToTextConverter x:Key="catImageTypeToTextConverter"></local:CatImageTypeToTextConverter>
+        </ResourceDictionary>
+    </Controls:MetroWindow.Resources>
+
+
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button Content="Show Error Rate Graph" Command="{Binding ShowGraphWindowCommand}"></Button>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Controls:MetroAnimatedTabControl>
+                    <TabItem Header="Training and Testing">
+                        <Grid Margin="0 4 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="200"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Background="{StaticResource AccentColorBrush4}">
+                                    <TextBlock Margin="8 10" Foreground="{StaticResource BlackColorBrush}">Local Image List</TextBlock>
+                                </Grid>
+
+                                <Grid Grid.Row="1">
+                                    <ListView Margin="0 0" ItemsSource="{Binding LocalImageCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListView.Visibility>
+                                            <Binding Path="LocalImageCollection.Count" Converter="{StaticResource emptyListVisibilityConverter}">
+                                                <Binding.ConverterParameter>
+                                                    <sys:Boolean>False</sys:Boolean>
+                                                </Binding.ConverterParameter>
+                                            </Binding>
+                                        </ListView.Visibility>
+                                        <ListView.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ListView.ItemsPanel>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="5">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <Grid Grid.Row="0">
+                                                        <TextBlock HorizontalAlignment="Center" Width="Auto" TextWrapping="WrapWithOverflow" FontSize="14" Text="{Binding ImageType, Converter={StaticResource catImageTypeToTextConverter}}"></TextBlock>
+                                                    </Grid>
+
+                                                    <Grid Grid.Row="1">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Image Margin="20 5" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Source="{Binding CompressedImage, Converter={StaticResource cvImageToBitmapImage}}" Height="100" Width="100"/>
+                                                    </Grid>
+
+                                                    <Grid Grid.Row="2">
+                                                        <StackPanel>
+                                                            <TextBlock HorizontalAlignment="Center" Foreground="Blue" Visibility="{Binding TrainingInProgress, Converter={StaticResource boolVisibilityCollapsedConverter}}">Training...</TextBlock>
+                                                            <TextBlock HorizontalAlignment="Center" Foreground="Red" Visibility="{Binding TestFailed, Converter={StaticResource boolVisibilityCollapsedConverter}}">Test Failed</TextBlock>
+                                                            <TextBlock HorizontalAlignment="Center" Foreground="Green" Visibility="{Binding TestPassed, Converter={StaticResource boolVisibilityCollapsedConverter}}">Test Passed</TextBlock>
+                                                            <Grid HorizontalAlignment="Center">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <TextBlock Grid.Column="0" Text="{Binding TrainedIterations}"></TextBlock>
+                                                                <TextBlock Margin="5 0 0 0" Grid.Column="1" Text="Iterations Trained"></TextBlock>
+                                                            </Grid>
+                                                            <Button HorizontalAlignment="Center" Width="30" Style="{StaticResource SquareButtonStyle}" Command="{Binding DataContext.DeleteLocalImageCommad, RelativeSource={RelativeSource AncestorType=Controls:MetroWindow}}" CommandParameter="{Binding LocalPath}">
+                                                                <Rectangle Height="10" Width="10">
+                                                                    <Rectangle.Fill>
+                                                                        <VisualBrush Visual="{StaticResource appbar_delete}" />
+                                                                    </Rectangle.Fill>
+                                                                </Rectangle>
+                                                                <Button.IsEnabled>
+                                                                    <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                                        <MultiBinding.ConverterParameter>
+                                                                            <sys:Boolean>True</sys:Boolean>
+                                                                        </MultiBinding.ConverterParameter>
+                                                                        <Binding Path="DataContext.TrainingNeuralNetwork" RelativeSource="{RelativeSource AncestorType=Controls:MetroWindow}" />
+                                                                        <Binding Path="DataContext.TestingNeuralNetwork" RelativeSource="{RelativeSource AncestorType=Controls:MetroWindow}" />
+                                                                        <Binding Path="DataContext.GeneratingLocalImagesFromRemote" RelativeSource="{RelativeSource AncestorType=Controls:MetroWindow}" />
+                                                                    </MultiBinding>
+                                                                </Button.IsEnabled>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <TextBlock FontWeight="DemiBold" Foreground="{StaticResource BlackColorBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Images in List. Please Add New or Refresh From Disk">
+                                        <TextBlock.Visibility>
+                                            <Binding Path="LocalImageCollection.Count" Converter="{StaticResource emptyListVisibilityConverter}">
+                                                <Binding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </Binding.ConverterParameter>
+                                            </Binding>
+                                        </TextBlock.Visibility>
+                                    </TextBlock>
+                                </Grid>
+                                
+                            </Grid>
+
+                            <Grid Grid.Column="1" Background="{StaticResource AccentColorBrush4}">
+                                <StackPanel Margin="5" VerticalAlignment="Center">
+                                    <Button Command="{Binding AddLocalImage}">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                <MultiBinding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </MultiBinding.ConverterParameter>
+                                                <Binding Path="TrainingNeuralNetwork" />
+                                                <Binding Path="TestingNeuralNetwork" />
+                                                <Binding Path="LoadingFilesFromDirectory" />
+                                                <Binding Path="GeneratingLocalImagesFromRemote" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Grid Margin="5">
+                                            <StackPanel>
+                                                <Rectangle Height="50" Width="50">
+                                                    <Rectangle.Fill>
+                                                        <VisualBrush Visual="{StaticResource appbar_list_add}" />
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                                <TextBlock HorizontalAlignment="Center">Add Image To List</TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Command="{Binding RefreshLocalImagesFromDirectory}">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                <MultiBinding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </MultiBinding.ConverterParameter>
+                                                <Binding Path="TrainingNeuralNetwork" />
+                                                <Binding Path="TestingNeuralNetwork" />
+                                                <Binding Path="LoadingFilesFromDirectory"/>
+                                                <Binding Path="GeneratingLocalImagesFromRemote" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Grid Margin="5">
+                                            <StackPanel>
+                                                <Rectangle Height="50" Width="50">
+                                                    <Rectangle.Fill>
+                                                        <VisualBrush Visual="{StaticResource appbar_refresh}" />
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                                <TextBlock HorizontalAlignment="Center">Load Images from Disk</TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Command="{Binding TrainNeuralNetwork}">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                <MultiBinding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </MultiBinding.ConverterParameter>
+                                                <Binding Path="TrainingNeuralNetwork" />
+                                                <Binding Path="LoadingFilesFromDirectory" />
+                                                <Binding Path="GeneratingLocalImagesFromRemote" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Grid Margin="5">
+                                            <StackPanel>
+                                                <Rectangle Height="50" Width="50">
+                                                    <Rectangle.Fill>
+                                                        <VisualBrush Visual="{StaticResource appbar_graph_line_down}" />
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                                <TextBlock HorizontalAlignment="Center">Start Training with Images</TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Command="{Binding TestNeuralNetworkWithLocalImages}">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                <MultiBinding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </MultiBinding.ConverterParameter>
+                                                <Binding Path="TestingNeuralNetwork" />
+                                                <Binding Path="LoadingFilesFromDirectory" />
+                                                <Binding Path="GeneratingLocalImagesFromRemote" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Grid Margin="5">
+                                            <StackPanel>
+                                                <Rectangle Height="50" Width="50">
+                                                    <Rectangle.Fill>
+                                                        <VisualBrush Visual="{StaticResource appbar_clipboard_paper_check}" />
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                                <TextBlock HorizontalAlignment="Center">Test Network Against Images</TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Image Downloader">
+                        <Grid Margin="0 4 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="200"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Background="{StaticResource AccentColorBrush4}">
+                                    <TextBlock Margin="8 10" Foreground="{StaticResource BlackColorBrush}">Remote Image List</TextBlock>
+                                </Grid>
+
+                                <Grid Grid.Row="1">
+                                    <ListView Margin="0 0 0 0" ItemsSource="{Binding RemoteImageCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListView.Visibility>
+                                            <Binding Path="RemoteImageCollection.Count" Converter="{StaticResource emptyListVisibilityConverter}">
+                                                <Binding.ConverterParameter>
+                                                    <sys:Boolean>False</sys:Boolean>
+                                                </Binding.ConverterParameter>
+                                            </Binding>
+                                        </ListView.Visibility>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="5">
+                                                    <StackPanel>
+                                                        <TextBlock TextWrapping="Wrap" FontSize="9" Text="{Binding Url}"></TextBlock>
+                                                        <TextBlock FontSize="14" Text="{Binding ImageType}"></TextBlock>
+                                                        <TextBlock Foreground="Blue" FontWeight="Bold" FontSize="8" Visibility="{Binding UploadInProgress, Converter={StaticResource boolVisibilityConverter}}">Download in Progress</TextBlock>
+                                                        <TextBlock Foreground="Green" FontWeight="Bold" FontSize="8" Visibility="{Binding Uploaded, Converter={StaticResource boolVisibilityConverter}}">Downloaded</TextBlock>
+                                                        <TextBlock Foreground="Red" FontWeight="Bold" FontSize="8" Visibility="{Binding Failed, Converter={StaticResource boolVisibilityConverter}}">Failed</TextBlock>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <TextBlock FontWeight="DemiBold" Foreground="{StaticResource BlackColorBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Empty Image URL List. Please click the button to select a CSV File.">
+                                        <TextBlock.Visibility>
+                                            <Binding Path="RemoteImageCollection.Count" Converter="{StaticResource emptyListVisibilityConverter}">
+                                                <Binding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </Binding.ConverterParameter>
+                                            </Binding>
+                                        </TextBlock.Visibility>
+                                    </TextBlock>
+                                </Grid>
+                            </Grid>
+
+                            <Grid Grid.Column="1" Background="{StaticResource AccentColorBrush4}">
+                                <StackPanel Margin="5" VerticalAlignment="Center">
+                                    <Button Command="{Binding OpenFileForRemoteImageCollection}">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                <MultiBinding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </MultiBinding.ConverterParameter>
+                                                <Binding Path="TestingNeuralNetwork" />
+                                                <Binding Path="TrainingNeuralNetwork" />
+                                                <Binding Path="LoadingFilesFromDirectory" />
+                                                <Binding Path="GeneratingLocalImagesFromRemote" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Grid Margin="5">
+                                            <StackPanel>
+                                                <Rectangle Height="50" Width="50">
+                                                    <Rectangle.Fill>
+                                                        <VisualBrush Visual="{StaticResource appbar_list_create}" />
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                                <TextBlock HorizontalAlignment="Center">Select Remote Images CSV File</TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Command="{Binding ReadRemoteListAndGenerateLocalList}">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource multipleBooleanORConverter}">
+                                                <MultiBinding.ConverterParameter>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </MultiBinding.ConverterParameter>
+                                                <Binding Path="TestingNeuralNetwork" />
+                                                <Binding Path="TrainingNeuralNetwork" />
+                                                <Binding Path="LoadingFilesFromDirectory" />
+                                                <Binding Path="GeneratingLocalImagesFromRemote" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Grid Margin="5">
+                                            <StackPanel>
+                                                <Rectangle Height="50" Width="50">
+                                                    <Rectangle.Fill>
+                                                        <VisualBrush Visual="{StaticResource appbar_download}" />
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                                <TextBlock HorizontalAlignment="Center">Download All Remote Images List</TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                        </Grid>
+                    </TabItem>
+                </Controls:MetroAnimatedTabControl>
+            </Grid>
+
+            <Grid Grid.Row="1" Background="{StaticResource AccentColorBrush}">
+                <TextBlock Foreground="{StaticResource IdealForegroundColorBrush}" Margin="5" Text="{Binding StatusMessage}"></TextBlock>
+            </Grid>
+        </Grid>
+    </Grid>
+</Controls:MetroWindow>

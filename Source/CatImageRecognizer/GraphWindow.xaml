@@ -1,0 +1,70 @@
+﻿<Controls:MetroWindow x:Class="CatImageRecognizer.GraphWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CatImageRecognizer"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen"
+        Title="Error Rate" Height="450" Width="800" ResizeMode="NoResize">
+
+    <Controls:MetroWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <local:BooleanInverterConverter x:Key="booleanInverter"></local:BooleanInverterConverter>
+            <local:EmgCVImageToBitmapImage x:Key="cvImageToBitmapImage"></local:EmgCVImageToBitmapImage>
+            <local:BoolToVisibilityConverter  x:Key="boolVisibilityConverter"></local:BoolToVisibilityConverter>
+        </ResourceDictionary>
+    </Controls:MetroWindow.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1" Background="{StaticResource AccentColorBrush}">
+            <TextBlock Foreground="{StaticResource IdealForegroundColorBrush}" Margin="5" Text="{Binding StatusMessage}">
+                <TextBlock.Visibility>
+                    <Binding Path="TrainingNeuralNetwork" Converter="{StaticResource boolVisibilityConverter}">
+                        <Binding.ConverterParameter>
+                            <sys:Boolean>False</sys:Boolean>
+                        </Binding.ConverterParameter>
+                    </Binding>
+                </TextBlock.Visibility>
+            </TextBlock>
+            <TextBlock Foreground="{StaticResource IdealForegroundColorBrush}" Margin="5" Text="Not Training Right Now!">
+                <TextBlock.Visibility>
+                    <Binding Path="TrainingNeuralNetwork" Converter="{StaticResource boolVisibilityConverter}">
+                        <Binding.ConverterParameter>
+                            <sys:Boolean>True</sys:Boolean>
+                        </Binding.ConverterParameter>
+                    </Binding>
+                </TextBlock.Visibility>
+            </TextBlock>
+        </Grid>
+        <Grid Grid.Row="0">
+            <lvc:CartesianChart Series="{Binding GraphData.SeriesCollection}" Hoverable="False" DataTooltip="{x:Null}" DisableAnimations="True">
+                <lvc:CartesianChart.AxisY>
+                    <lvc:Axis MinValue="0" Title="Error Rate">
+                        <lvc:Axis.Sections>
+                            <lvc:AxisSection Value="0" StrokeThickness="2" Stroke="#333333"></lvc:AxisSection>
+                        </lvc:Axis.Sections>
+                    </lvc:Axis>
+                    <lvc:Axis MinValue="0" MaxValue="100" ShowLabels="False"/>
+                    <lvc:Axis MinValue="0" MaxValue="100" ShowLabels="False"/>
+                </lvc:CartesianChart.AxisY>
+                <lvc:CartesianChart.AxisX>
+                    <lvc:Axis MaxValue="{Binding GraphData.AxisMax}" MinValue="{Binding GraphData.AxisMin}" ShowLabels="False">
+                        <lvc:Axis.Sections>
+                            <lvc:AxisSection StrokeThickness="2" Stroke="#333333"></lvc:AxisSection>
+                        </lvc:Axis.Sections>
+                    </lvc:Axis>
+                </lvc:CartesianChart.AxisX>
+            </lvc:CartesianChart>
+        </Grid>
+    </Grid>
+</Controls:MetroWindow>
